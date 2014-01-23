@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>leaftime</title>
+		<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+		<link rel="icon" href="/favicon.ico" type="image/x-icon">
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+		<style>
+			body{font-family: helvetica, sans-serif; font-size: 12px; background-color: #F7F7F7;}
+			textarea{width:600px; height:400px;}
+			#results{white-space:pre;}
+		</style>
+	</head>
+	<body>
+		Example: (add "debug":true to turn on debugging)
+		<div id='examples'>
+		</div>
+		<textarea id='params' placeholder='Click a json string above to populate.'></textarea><br />
+		<input type='submit' onclick='go();' /> <span id='loading'>loading...</span>
+		<div id='results'>
+		</div>
+	<script>
+		$('#loading').hide();
+		
+		var examples = [
+		'{"action":"get_lat_long_for_zip","action_args":["94538"],"debug":true}',
+		'{"action":"get_zip_for_lat_long","action_args":["37.530815","-121.971215"]}',
+		'{"action":"get_dummy_data_for_forecast"}',
+		'{"action":"get_dummy_data_for_history"}',
+		'{"action":"get_weather_forecast_wunder","action_args":["94538"]}',
+		'{"action":"get_weather_forecast_wonline","action_args":["94538"]}',
+		'{"action":"create_monthly_history_dates","action_args":["2013-01-1"]}',
+		'{"action":"get_weather_historic_wonline","action_args":["02238", "2013-10-01", "2013-10-30"]}',
+		'{"action":"get_weather_historic_wunder","action_args":["02238", "2013-11-25"]}',
+		'{"action":"get_degree_day_sum_wonline","action_args":["94538", "2013-9-1", "50"]}',
+		'{"action":"get_degree_day_sum_wunder","action_args":["94538", "2013-11-25", "50"]}',
+		'{"action":"get_degree_day_sum","action_args":["94538", "2013-9-1", "50"]}',
+		'{"action":"get_predictions","action_args":["42.377045","-71.125611","2013-10-25"]}',
+		'{"action":"get_predictions_for_zip","action_args":["02238","2013-10-25"]}'
+		];
+
+		_.each(examples, function(o){
+			$('#examples').append("<a href='#a' onclick='$(\"#params\").val($(this).html());'>" + o + "</a><br />");
+		});
+
+		function go(){
+			var params = $('#params').val();
+			if(params == ''){params = '{}';}
+			try{
+				params = JSON.parse(params); // try to parse once so that we know it is valid 
+			}catch(e){
+				alert('Invalid JSON');
+				return;
+			}
+			$('#loading').show();
+			$.getJSON('ajax.php', {data: JSON.stringify(params)}).always(function(data){
+				$('#loading').hide();
+				if(data.responseText){
+					$('#results').html(nl2br(data.responseText));
+					return;
+				}
+				$('#results').html(JSON.stringify(data, null, 2));
+			});
+		}
+
+		function nl2br (str, is_xhtml) {   
+			var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';    
+			return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1'+ breakTag +'$2');
+		}
+	</script>
+	</body>
+</html>

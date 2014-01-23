@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>leaftime</title>
+		<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+		<link rel="icon" href="/favicon.ico" type="image/x-icon">
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script type="text/javascript" src="//use.typekit.net/ndu1rsk.js"></script>
+		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+		<script src="//codeorigin.jquery.com/jquery-1.8.3.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.4.0/moment.min.js"></script>
+		<script type="text/javascript" src="images/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
+		<link rel="stylesheet" href="images/fancybox/jquery.fancybox-1.3.4.css" type="text/css" media="screen" />
+		<script src='//cdnjs.cloudflare.com/ajax/libs/jquery.cycle/3.03/jquery.cycle.all.min.js'></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.11/d3.min.js"></script>
+		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+
+		<style>
+			body{font-family: helvetica, sans-serif; font-size: 12px; background-color: #F7F7F7;}
+			.body{width:1000px; margin:0 auto; color: #6B6B6B;}
+			.content{padding:0px;}
+			a{text-decoration:none; color:#AFAFAF;}
+			a:hover{text-decoration:underline; color:#DD7474}
+			.day_container{border: solid 1px #dedede; width:370px; padding:8px; margin:2px; margin-left:0; background-color:white;}
+			#zipcode{padding:10px; width:300px;}
+			.loading{height:200px; background:url(images/ajax-loader.gif) center center no-repeat;}
+			.font1{font-weight:100;}
+			.logo{font-size:56px; color:#808080; line-height:50px; float:left;}
+			.nav{float:right; margin-top:20px; margin-right:20px}
+			.nav a{margin-left:50px;}
+			.logo .color{color:#DD7474;}
+			
+
+			.cell_day    {float:left; width:100px; height:36px;}
+			.cell_chance {float:left; width:90px; height:36px;}
+			.cell_event   {float:left; width:150px; height:36px;}
+			.cell_event .bigtext{text-align: center;}
+			.bigtext{font-weight:700; font-size:27px; color:#5E5E5E; line-height:30px; height:25px;}
+			.subtext{font-size:11px; color:#ADADAD; text-transform: uppercase;}
+
+			.cell_chance .bigtext{font-weight:400;}
+			.cell_event img{position:relative; top:-2px;}
+			.cell_event .leaf{position:relative; top:-8px;}
+			.cell_event .subtext  {text-align:center;}
+			.clear{clear:both;}
+			h1{font-weight:normal; padding-bottom:0px; margin-bottom:0px; color: #f09c62; font-family: "brandon-grotesque",sans-serif; font-size:30px; border-bottom: solid 1px; margin-bottom: 10px;}
+			.logo_tag_line {font-size: 15px; font-style: italic; font-family: helvetica; position: relative; top: -8px; left: 20px; color:#A8A5A5;}
+			p{line-height: 175%; color: #6B6B6B;}
+
+
+			.geo_target{vertical-align: bottom; position: relative; top: -2px; opacity:.8; cursor:pointer;}
+			.geo_target:hover{opacity:1;}
+
+			.button {
+				margin-top:10px; color: #FFF; background: #E78D4F; padding: 8px 14px 10px; border: 1px solid #C28120; cursor: pointer; font-size: 1.2em; letter-spacing: 0.07em; text-shadow: 0 -1px 0px rgba(0, 0, 0, 0.3);
+				-webkit-box-shadow: inset 0px 1px 0px #D18E18, 0px 2px 0px 0px #E2BEA6, 0px 2px 5px #999;
+				-moz-box-shadow: inset 0px 1px 0px #D18E18, 0px 2px 0px 0px #E2BEA6, 0px 2px 5px #999;
+				box-shadow: inset 0px 1px 0px #D18E18, 0px 2px 0px 0px #E2BEA6, 0px 2px 5px #999;
+				-moz-border-radius: 10px;
+				-webkit-border-radius: 10px;
+				border-radius: 10px;
+			}
+
+			.button:hover, .button:focus {background: #FC9D5C;}
+
+			.glossary{width:385px;}
+			#glossary_events{margin-top:10px; width:100%;}
+			.glossary_event{line-height: 150%; margin-bottom:10px;}
+			.glossary_c1{padding-right:10px; width:75px; vertical-align: top;}
+			.glossary_c2{vertical-align: top;}
+			.glossary_title{font-weight:bold;}
+
+			.shadow{
+				-webkit-box-shadow: 0px 0px 5px rgba(50, 50, 50, 0.75);
+				-moz-box-shadow:    0px 0px 5px rgba(50, 50, 50, 0.75);
+				box-shadow:         0px 0px 5px rgba(50, 50, 50, 0.75);
+			}
+
+			/* Slideshow Section */
+			.slideshowHolder{position:relative; width:1000px; height:200px; overflow:hidden;}
+			.pager{position:absolute; text-align:center; bottom:-12px; width:100%; z-index:10;}
+			.pager a{color:gray; font-size:40px; padding:3px; text-decoration:none;  outline: none;}
+			.pager a:hover{color:#dedede;}
+			a.activeSlide{color:#DD7474;}
+
+			/* Timeline Section */
+			#timeline{width:600px;}
+			.axis path,
+			.axis line {fill: none; stroke: #000; shape-rendering: crispEdges;}
+			.dot {}
+			#timeline .selected{font-weight:bold; color:#f09c62;}
+			#timeline td span{cursor:pointer;}
+			.timeline_dates{position: relative; top:14px;}
+
+			#map_holder{width:600px; position:relative;}
+			#map{width:600px; height:400px;}
+			.stations, .stations svg {position: absolute;}
+			.stations svg {width: 60px; height: 20px; padding-right: 100px; font: 10px sans-serif;}
+			.pixel{opacity:0.5;}
+			#results{height:560px;}
+			#change_location_link{font-size:14px;}
+
+			#tooltip{position:absolute; z-index:10; padding:10px; background:white;}
+		</style>
+		
+	</head>
+	<body>
+	<div class='body'>
+		<div class='font1 logo'>leaf<span class='color'>time</span> <span class='logo_tag_line'>forecasting the life cycles of leaves</span></div>
+
+		<div class='nav'>
+			<a href='http://nbviewer.ipython.org/urls/raw.github.com/jonnydmoon/leaftime/master/Leaf_Phenology.ipynb' target='_blank'>IPython Notebook</a>
+			<!--
+			<a id='video' href='javascript:;' target='_blank'>Video</a>
+			<a id='map_link' href='javascript:;' target='_blank'>Map</a>
+			-->
+		</div>
+		<div class='clear'></div>
+
+		<div class='content'>
+			<div class='slideshowHolder'>
+				<div class='slideshow'>
+					<img src='images/b1.jpg' />
+					<img src='images/b2.jpg' />
+					<img src='images/b3.jpg' />
+					<img src='images/b4.jpg' />
+				</div>
+				<div id='pager' class='pager'></div>
+			</div>
+
+			<div id='slow_to_load_section' style='position:relative;'>
+
+			<div id='slow_to_load_section_loading' class='loading' style='height:auto; z-index:10; position:absolute; left:0px; right:0px; top:0px; bottom:0px; background-color:#F7F7F7;'>
+				<div style='position:absolute; top:40%; text-align:center; width:100%;'>Loading lots of data. Please wait.</div>
+			</div>
+
+			<h1>Showing forecast for: <span id='latlng_span'></span> <a href='#a' id='change_location_link' onclick='$("#new_location_form").toggle(); return false;'>Change Location</a></h1>
+			<div id='new_location_form' style='display:none; margin-bottom:15px;'>
+				<form onsubmit='getForecast(); return false;'>
+					<input type='text' id='zipcode' placeholder='Enter a ZIP code or latitude, longitude' value='42.3744, -71.1169' />
+					<img class='geo_target' src='images/target.png' title='Use my computer location'  onclick='getLocation()' />
+					<br />
+					<input type='submit'  class='button' onclick='$("#new_location_form").hide(); getForecast()' value='Update'/>
+				</form>
+			</div>
+
+			<table style='border-collapse: collapse; border-spacing: 0;'>
+			<tr>
+			<td style='vertical-align:top; width:400px;'>
+				<div id='results'></div>
+			</td>
+
+			<td style='vertical-align:top;'>
+				<div id="map_holder">
+					
+					 
+					  	<i>Drag the slider to change the date of the forecast.</i>
+					  
+					  	<div id='timeline'>
+					  		<div class='timeline_dates'>
+								<table style='width:100%; text-align:center;'>
+								  <tr>
+									
+									<td><span class='year_2001 timeline_year'>2001</span></td>
+									<td><span class='year_2002 timeline_year'>2002</span></td>
+									<td><span class='year_2003 timeline_year'>2003</span></td>
+									<td><span class='year_2004 timeline_year'>2004</span></td>
+									<td><span class='year_2005 timeline_year'>2005</span></td>
+									<td><span class='year_2006 timeline_year'>2006</span></td>
+									<td><span class='year_2007 timeline_year'>2007</span></td>
+									<td><span class='year_2008 timeline_year'>2008</span></td>
+									<td><span class='year_2009 timeline_year'>2009</span></td>
+									<td><span class='year_2010 timeline_year'>2010</span></td>
+									<td><span class='year_2011 timeline_year'>2011</span></td>
+									<td><span class='year_2012 timeline_year'>2012</span></td>
+									<td><span class='year_2013 timeline_year'>2013</span></td>
+								  </tr>
+								</table>
+						  	</div>
+
+						  	<input id='timeline_slider' type="range" style='width:580px; margin-left:10px; position:relative; top:20px;' value='' name="points" min="1" max="365" onchange="changeCurrentDay();" /> 
+
+						  	<div id='timeline_svg'></div>
+						</div>
+
+						<div id="map"></div>
+						<i>Drag the marker on the map to change the location of the forecast.</i>
+					</div>
+				</div>  
+			</td>
+			</tr>
+			</table>
+
+			</div>
+			
+
+
+
+			<table style='border-collapse: collapse; border-spacing: 0;'>
+			<tr>
+			<td style='vertical-align:top; width:400px;'>
+				<div class='glossary'>
+					<h1>The Five Predicted Events</h1>
+					Leaftime predicts 5 popular events in the life cycle of a leaf.
+					<table id='glossary_events'></table>
+				</div>
+			</td>
+
+			<td style='vertical-align:top;'>
+				<h1>Overview</h1>
+				<p>This brief video gives a short explanation of how the predictions are made. It also highlights some of the benefits that come from understanding more about the life cyles of leaves.</p>
+				<iframe width="600" height="338" src="//www.youtube.com/embed/CqJ3RGv9BBQ?rel=0" frameborder="0" allowfullscreen></iframe>
+			</td>
+			</tr>
+			</table>
+	
+			<div class='section'>
+				<h1>About</h1>
+				<p>
+				Leaf phenology is the seasonal timing of leaf development and is of general public interest for amateur naturalists who are interested in when leaves emerge in spring, and change colors in fall. The timing of these natural biological phenomena is driven by abiotic drivers, primarily the seasonal cycle of temperature.
+				</p> 
+			</div>
+		
+			<div class='section'>
+				<h1>How it Works</h1>
+				<p>
+					The life cycle events of a leaf depend significantly on the cumulative temperatures of the year. Each unit is called a growing-degree day. It is computed by subtracting a base temperature from the average temperature of the day. Each life cycle event of a leaf usually occurs once a certain number of Growing-Degree Days have passed. For example a bud break event may occur for a certain species at 30 growing-degree days.<br />
+					<br />
+					The steps to make the prediction are as follows:
+				</p>
+				<ol>
+					<li><p>Satelite images of past years are analyzed to determine when the events occured. This analysis involves measuring differences in color hues and infrared values. The day of the event is then converted to a growing-degree day value by calculating all of the temperatures as described previously.</p></li>
+					<li><p>Now that the growing degree day value of the events is known, the current year-to-date growing-degree day value is calculated.</p></li>
+					<li><p>By combining the year-to-date growing-degree day value with forecasted growing-degree day values, we are able to make a prediction of when a leaf event will occur.</p></li>
+				</ol> 
+			</div>
+
+			
+			<div style='text-align:center; font-size:10px; color:gray;'>
+				Geocoding information provided by <a href='http://geonames.org' target='_blank'>GeoNames.org</a>
+			</div>
+
+			
+
+		</div>
+	</div>
+
+
+
+
+<div id='tooltip' class='shadow' style='display:none;'></div>
+
+
+
+<!--
+	
+
+	<div>
+		<h1>details</h1>
+		Leaf phenology is the seasonal timing of leaf development and is of general public interest for amateur naturalists who are interested in when leaves emerge in spring, and change colors in fall. The timing of these natural biological phenomena is driven by abiotic drivers, primarily the seasonal cycle of temperature. 
+	</div>
+-->
+	<script type='text/template' id='glossary_event_template'>
+		<tr class='glossary_event'>
+			<td class='glossary_c1'>
+				<img class='glossary_event_thumb shadow' src='<%= img %>' />
+			</td>
+			<td class='glossary_c2'>
+				<div class='glossary_title'><%= title %></div>
+				<%= description %>
+			</td>
+		</tr>
+	</script>
+
+
+	<script type='text/template' id='day_template'>
+		<div class='day_container'>
+			<div class='cell_day'>
+				<div class='bigtext'><%= date.format('ddd') %></div>
+				<div class='subtext'><%= date.format('MMM D') %></div>
+			</div>
+			<div class='cell_chance'>
+				<div class='bigtext'><%= chance %></div>
+				<div class='subtext'>event chance</div>
+			</div>
+			<div class='cell_event'>
+				<div class='bigtext'><%= image %></div>
+				<div class='subtext'>event: <%= event %></div>
+			</div>
+			<div class='clear'></div>
+		</div>
+	</script>
+
+	<script type='text/template' id='leaf_template'>
+		<svg class='leaf' version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="120%" height="120%" viewBox="0 0 78.5 83.5" enable-background="new 0 0 78.5 110.5" xml:space="preserve">
+			<g>
+				<g>
+					<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="16.084" y1="89.6689" x2="60.7753" y2="12.2614">
+						<stop  offset="0" style="stop-color:#582931"/>
+						<stop  offset="0.2066" style="stop-color:<%= color1 %>"/>
+						<stop  offset="0.3039" style="stop-color:<%= color1 %>"/>
+						<stop  offset="1" style="stop-color:<%= color2 %>"/>
+					</linearGradient>
+					<path fill="url(#SVGID_1_)" d="M21.044,21.406c0.167,1.61,0.862,2.025,0.945,1.445c0.083-0.585-0.248,2.025,0.114,3.109
+						c0.362,1.083,1.304-0.528,1.305,1.138s-0.828,5.553,0.199,5.581c1.028,0.027,1.527-0.695,1.389,0.833
+						c-0.138,1.527-1.078,7.303-0.467,7.748c0.611,0.441,2.444-0.725,2.473,0.471c0.028,1.193-1.882,9.607-0.657,12.718
+						c1.225,3.108,5.188-6.642,5.271-7.781c0.082-1.138-0.033-5.914,0.05-6.495c0.083-0.585,0.86-0.473,0.86-0.473
+						s-0.89-2.39-0.92-4.694c-0.029-2.305,1.22-3.834,1.164-4.275c-0.055-0.444,1.778,0.608,2.64,2.08
+						c0.861,1.47,3.42,5.521,4.558,4.216c1.137-1.308,1.494-7.723,1.632-8.693c0.137-0.97,0.777-0.167,0.777-0.167
+						s-0.059-2.665,0.302-4.638c0.358-1.972,0.497-2.667,0.386-2.999c-0.111-0.333,1.529,1.805,2.223,3.053
+						c0.696,1.249,1.478,3.303,2.17,2.885c0.694-0.417,1.636-3.415,2.329-3.834c0.695-0.415,0.363,1.917,1.417,1.195
+						c1.055-0.725,2.495-4.167,3.217-4.502c0.723-0.334,0.863,1.193,1.334-0.444c0.472-1.639,0.747-2.194,0.859-1.862
+						c0.111,0.333,1.084-0.64,1.305-1.084c0.222-0.445,0.99-0.141,1.239-0.78c0.25-0.637,0.032-0.087,0.587-0.919l1.606-1.644
+						c0,0-0.193,1.194-0.679,2.07s-0.153,0.39-0.605,0.908c-0.453,0.515,0.152,1.047-0.143,1.448c-0.293,0.399-0.709,1.71-0.362,1.655
+						c0.347-0.053-0.019,0.448-1.259,1.619c-1.238,1.17,0.183,0.594,0.217,1.389c0.036,0.793-2.361,3.657-2.52,4.927
+						c-0.154,1.267,1.764-0.097,1.712,0.71c-0.052,0.808-2.283,3.023-2.335,3.831c-0.051,0.807,2.133,0.557,3.56,0.6
+						c1.431,0.043,4.081,0.516,3.733,0.571c-0.346,0.054-0.9,0.497-2.485,1.722c-1.587,1.227-3.981,2.397-3.981,2.397
+						s1.01,0.2,0.209,0.77c-0.799,0.568-6.333,3.833-6.971,5.443c-0.637,1.611,4.137,2.021,5.84,2.111
+						c1.703,0.089,3.48,1.232,3.062,1.387c-0.421,0.154-1.204,1.967-3.266,3c-2.06,1.032-4.59,1.339-4.59,1.339
+						s0.454,0.642-0.024,0.981c-0.479,0.341-4.775,2.436-5.748,3.029c-0.973,0.598-7.812,8.599-4.488,8.256
+						c3.325-0.342,9.921-5.903,10.996-6.428c1.073-0.522,0.879,1.641,1.553,1.98c0.674,0.338,5.374-3.152,6.668-3.975
+						c1.293-0.823,0.88-0.05,1.377,0.853c0.496,0.898,3.568-1.625,5.048-2.391c1.48-0.766,0.483,0.813,1.61,0.638
+						c1.129-0.177,3.295-1.671,2.816-1.328c-0.482,0.343,0.208,0.766,1.715,0.179c1.508-0.594,4.15-0.738,3.337-0.258
+						c-0.813,0.482-3.884,3.008-3.917,3.37c-0.033,0.359,0.923,0.209,0.543,0.623c-0.379,0.416-1.814,0.908-2.615,1.476
+						c-0.799,0.57,0.684,0.962,0.45,1.174c-0.233,0.213-2.521,0.928-3.016,1.184c-0.493,0.254,1.063,0.543,0.37,0.653
+						c-0.694,0.108-3.869,1.403-3.768,2.632c0.104,1.228,1.766,1.057,1.026,1.438c-0.741,0.382-2.915,1.256-5.272,1.535
+						c-2.354,0.279-3.001,1.271-1.529,2.727c1.473,1.46,2.102,2.072,0.595,2.663c-1.508,0.592-4.466,0.432-4.038,0.897
+						c0.43,0.466-0.105,0.46-1.975-0.136c-1.871-0.597-8.754,0.301-10.092,1.399c-1.342,1.098,2.463,3.259,4.074,3.896
+						c1.609,0.638,1.607,2.328,2.496,2.9c0.891,0.569,2.192,3.211,1.59,2.771c-0.602-0.438-3.039-0.681-4.363-1.183
+						c-1.324-0.506-1.014,0.335-1.908,0.297c-0.895-0.037-2.254-1.338-3.696-1.468c-1.442-0.129,0.952,1.539-0.431,1.223
+						c-1.383-0.315-2.435-1.93-3.023-2.281c-0.589-0.353-1.374,0.303-1.374,0.303s-1.486-1.545-5.3-2.64
+						c-3.816-1.092-6.178-0.279-6.178-0.279l-0.544-0.126c3.63-10.135,12.395-22.919,12.484-23.049l-0.197-0.14
+						c-0.07,0.095-7.037,9.455-8.41,12.143c-0.383,0.747-0.958,1.796-1.626,3.013c-1.506,2.744-3.381,6.159-4.618,8.961
+						c-0.544,1.23-1.204,2.596-1.842,3.914c-1.765,3.646-2.827,5.911-2.417,6.443c0.373,0.487,1.352,0.673,2.029,0.74
+						c-0.078,0.386-0.169,0.613-0.429,0.771l-0.117,0.069h-0.137c-0.388-0.004-2.347-0.065-3.01-0.929
+						c-0.521-0.676,0.198-2.314,2.378-6.823c0.637-1.315,1.295-2.678,1.837-3.904c0.42-0.949,0.896-1.97,1.402-3.009
+						c-0.162-0.314-0.281-0.657-0.338-1.024c-0.023-0.143-0.02-0.281-0.024-0.422c-0.436-0.974-1.201-2.277-2.53-3.686
+						c-2.723-2.888-4.778-3.496-4.778-3.496s0.22-0.999-0.364-1.359c-0.583-0.36-2.498-0.555-3.417-1.634
+						c-0.917-1.085,1.669,0.271,0.889-0.946c-0.779-1.223-2.557-1.833-3.001-2.61c-0.444-0.775,0.443-0.888-0.612-1.832
+						c-1.057-0.941-2.392-2.997-3.059-3.327c-0.666-0.335,2.278-0.392,3.196,0.134c0.916,0.526,2.415-0.251,3.721,0.885
+						c1.305,1.14,4.973,3.524,5.333,1.832c0.36-1.695-2.007-8.219-3.396-9.607c-1.389-1.388-1.641-1.858-1.029-1.693
+						c0.612,0.166-0.891-2.387-1.057-3.999c-0.169-1.608,0.663-1.332,2.637-0.694c1.97,0.637,2.554-0.392,1.719-2.612
+						c-0.833-2.222-1.058-4.553-1.059-5.388c-0.001-0.832,0.612,0.723,1.75,0.25c1.137-0.473,0.829-3.888,0.606-4.555
+						c-0.223-0.667,0.75,0.583,0.75,0.028c0.001-0.557-0.418-2.917-0.335-3.222c0.083-0.307,1.112,0.831,1.25-0.141
+						c0.139-0.972-0.085-2.471,0.109-2.999c0.194-0.528,0.501,0.388,0.805,0.196c0.306-0.198,1.136-4.086,1.19-5.03
+						C19.791,17.382,20.876,19.797,21.044,21.406z"/>
+				</g>
+				<g>
+					<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="19.1016" y1="107.2363" x2="19.1016" y2="90.9688">
+						<stop  offset="0" style="stop-color:#FFFFFE"/>
+						<stop  offset="0.2783" style="stop-color:#F8FAEF"/>
+						<stop  offset="0.81" style="stop-color:#E5EFC9"/>
+						<stop  offset="1" style="stop-color:#DDEBB9"/>
+					</linearGradient>
+					<path fill="url(#SVGID_2_)" d="M21.085,102.907c-0.544-1.229-1.204-2.596-1.842-3.913c-1.765-3.646-2.827-5.912-2.417-6.443
+						c0.373-0.488,1.352-0.674,2.029-0.74c-0.078-0.386-0.169-0.614-0.429-0.771l-0.117-0.07h-0.137
+						c-0.388,0.004-2.347,0.066-3.01,0.929c-0.521,0.677,0.198,2.314,2.378,6.823c0.637,1.315,1.295,2.678,1.837,3.903
+						c0.42,0.95,0.896,1.971,1.402,3.01c-0.162,0.314-0.281,0.657-0.338,1.025c-0.023,0.142-0.02,0.28-0.024,0.421
+						c-0.021,0.048-0.055,0.106-0.078,0.156h2.864C22.425,105.748,21.681,104.257,21.085,102.907z"/>
+					<linearGradient id="SVGID_3_" gradientUnits="userSpaceOnUse" x1="36.938" y1="107.2363" x2="36.938" y2="97.6309">
+						<stop  offset="0" style="stop-color:#FFFFFE"/>
+						<stop  offset="0.4981" style="stop-color:#F8FAEF"/>
+						<stop  offset="1" style="stop-color:#EFF5DC"/>
+					</linearGradient>
+					<path fill="url(#SVGID_3_)" d="M46.184,103.353c1.609-0.638,1.607-2.328,2.496-2.9c0.891-0.569,2.192-3.211,1.59-2.772
+						c-0.602,0.439-3.039,0.682-4.363,1.184c-1.324,0.507-1.014-0.335-1.908-0.297s-2.254,1.338-3.696,1.468s0.952-1.539-0.431-1.223
+						c-1.383,0.315-2.435,1.93-3.023,2.281c-0.589,0.353-1.374-0.303-1.374-0.303s-1.486,1.545-5.3,2.64
+						c-3.816,1.092-6.178,0.279-6.178,0.279l-0.544,0.126c0.397,1.108,0.858,2.25,1.361,3.401H42.1
+						C40.793,106.138,44.577,103.988,46.184,103.353z"/>
+				</g>
+			</g>
+			</svg>
+	</script>
+	<script>
+
+		var day_template = _.template($('#day_template').html());
+		var leaf_template = _.template($('#leaf_template').html());
+		var glossary_template = _.template($('#glossary_event_template').html());
+		var selected_year = 2013;
+		var selected_lat_lng = [42.373, -71.117];
+		var pixel_data;
+		var event_names = {
+			event_1: 'Bud Break',
+			event_2: 'Leaf Maturity',
+			event_3: 'Beginning of Fall Colors',
+			event_4: 'Most Intense Fall Colors',
+			event_5: 'End of Leaf Drop',
+		};
+
+		var selected_day = moment().dayOfYear();
+		$('#timeline_slider').val(selected_day);
+
+		var colors = {
+			e0: '#A38C72',
+			e1: 'lightgreen',
+			e2: 'green',
+			e3: 'yellow',
+			e4: 'red',
+			e5: '#A38C72',
+		};
+
+		var glossary_events = [
+			{img: 'images/event1.jpg', title: event_names.event_1, description: 'This event occurs when the leaf breaks out of the bud.'},
+			{img: 'images/event2.jpg', title: event_names.event_2, description: 'This occurs when a leaf reaches its greenest color.'},
+			{img: 'images/event3.jpg', title: event_names.event_3, description: 'This event is triggered when leaves start to change color.'},
+			{img: 'images/event4.jpg', title: event_names.event_4, description: 'This event occurs when leaves collectively reach their most vibrant fall colors.'},
+			{img: 'images/event5.jpg', title: event_names.event_5, description: 'This occurs when leaves have dropped off the trees.'}
+		];
+
+		_.each(glossary_events, function(o){
+			$('#glossary_events').append(glossary_template(o));
+		});
+		
+
+
+		function getForecast(){
+			$('#results').html(''); // have a loading leaf...
+
+			if(selected_year < 2009){
+				$('#results').html('<div style="margin-top:200px; text-align:center;">Historical forecasts are only after the year 2009.</div>');
+				return;
+			}
+
+			var zip, lat, lng;
+
+			zip = $.trim($('#zipcode').val());
+
+			if(zip.length == 5 && zip.indexOf(',') === -1){
+				
+				$.ajax({
+					url: 'http://api.geonames.org/findNearbyPostalCodesJSON?country=US&postalcode=' + zip + '&username=pheno@jonnymoon.com',
+					async: false,
+				}).done(function(data) {
+				  	lat = data.postalCodes[0].lat;
+				  	lng = data.postalCodes[0].lng;
+				});
+
+			}else{
+				var coords = zip.split(',');
+				lat = $.trim(coords[0]);
+				lng = $.trim(coords[1]);
+				if(_.isEmpty(lat) || _.isEmpty(lng)){
+					alert('Invalid input');
+					return;
+				}
+				zip = null;
+			}
+
+			var pixel = getClosestPixel(lat,lng);
+
+			selected_lat_lng = [pixel.lat, pixel.lng];
+
+			updateMapAndTimeline();
+
+			var params = {
+				action: 'get_predictions',
+				action_args: [pixel.lat, pixel.lng, moment().year(selected_year).dayOfYear(selected_day).format('YYYY-MM-DD')]
+			};
+
+			$('#results').html('').addClass('loading');
+
+			$.getJSON('ajax.php', {data: JSON.stringify(params)}, function(data){
+				$('#slow_to_load_section').show();
+				$('#slow_to_load_section_loading').hide();
+
+				$('#results').html('').removeClass('loading');
+				_.each(data.predictions, function(o){
+					renderDayForecast(o);
+
+				});
+			});
+		}
+
+		var getForecastOnce = _.once(getForecast);
+		getForecast = _.debounce(getForecast, 1000);
+
+		
+
+		function renderDayForecast(o){
+			o.date = moment(o.date, 'YYYYMMDD'); // make a moment date object so that we can format it easily.
+			
+			best_event = 'event_1';
+			if(o.events.event_2 > o.events[best_event]){best_event = 'event_2'}
+			if(o.events.event_3 > o.events[best_event]){best_event = 'event_3'}
+			if(o.events.event_4 > o.events[best_event]){best_event = 'event_4'}
+			if(o.events.event_5 > o.events[best_event]){best_event = 'event_5'}
+
+			// since the 1st event is 1 once it is reached, it makes it hard to find the true event. For now, just check to see if the event is greater than 20%.
+			use_cumulative_temps = true;
+			if(use_cumulative_temps){
+				if(o.events.event_2 > 0.2 && o.events.event_2 != o.events.event_1){best_event = 'event_2'}
+				if(o.events.event_3 > 0.2 && o.events.event_3 != o.events.event_2){best_event = 'event_3'}
+				if(o.events.event_4 > 0.2 && o.events.event_4 != o.events.event_3){best_event = 'event_4'}
+				if(o.events.event_5 > 0.2 && o.events.event_5 != o.events.event_4){best_event = 'event_5'}
+			}
+
+
+			o.event = event_names[best_event];
+			o.chance = d3.format('.0f')(o.events[best_event] * 100) + '%';
+			o.image = getLeaf(best_event);
+			$('#results').append(day_template(o));
+		}
+
+		function getLeaf(event){
+			
+
+			//color1 = main botttom color, color2 = maintop color
+			var color_map = {
+				'event_1': {color1: '#82BC00', color2: '#82BC00', image: 'images/event1.png'},
+				'event_2': {color1: '#82BC00', color2: '#FFC93F', image: 'images/event2.png'},
+				'event_3': {color1: '#FFC93F', color2: '#F1662F', image: 'images/event3.png'},
+				'event_4': {color1: '#F1662F', color2: '#D50707', image: 'images/event4.png'},
+				'event_5': {color1: '#D50707', color2: '#96744A', image: 'images/event5.png'}
+			};
+
+			return "<img src='" + color_map[event].image + "' />";
+
+			color = color_map[event];
+
+
+
+			return leaf_template(color);
+		};
+
+		function tooltip(show, d, x, y){
+			if(!show){
+				$('#tooltip').hide();
+				return;
+			}
+			debugger;
+			
+			if(d.event){
+				var html = "Actual Results:<br />Event: " + event_names[d.event] + "<br />Date: " + moment().year(selected_year).dayOfYear(d.x).format('MMMM Do, YYYY')
+			}
+
+			$('#tooltip').css({left: x, top:y});
+			$('#tooltip').html(html);
+			$('#tooltip').show();
+		}
+
+		function getLocation()
+		{
+			if (navigator.geolocation){
+				navigator.geolocation.getCurrentPosition(function(position){
+					$('#zipcode').val(position.coords.latitude + ', ' + position.coords.longitude);
+					getForecast();
+				});
+			}
+			else{
+				alert("Geolocation is not supported by this browser.");
+			}
+		}
+
+		function changeCurrentDay(){
+			selected_day=$('#timeline_slider').val();  
+			updateMapAndTimeline();
+			getForecast();
+		}
+
+		$("#video").fancybox({
+			'padding'		: 0,
+			'autoScale'		: false,
+			'transitionIn'	: 'none',
+			'transitionOut'	: 'none',
+			'width'			: 640,
+			'height'		: 360,
+			'href'			: '//www.youtube.com/embed/CqJ3RGv9BBQ?rel=0&autoplay=1',
+			'type'			: 'iframe'
+		});
+
+		$("#map_link").fancybox({
+			'padding'		: 0,
+			'autoScale'		: false,
+			'transitionIn'	: 'none',
+			'transitionOut'	: 'none',
+			'width'			: 1400,
+			'height'		: 900,
+			'href'			: 'map.html',
+			'type'			: 'iframe'
+		});
+
+
+		$(document).ready(function() {
+			$('.slideshow').cycle({
+				fx: 'fade', // choose your transition type, ex: fade, scrollUp, shuffle, etc...
+				speed: 4000,
+				speedIn: 1000,
+				speedOut: 1000,
+				timeout: 2000,
+				pause: 1,
+				pager: '#pager',
+				sync: 1,
+				nowrap: 0,
+				next: '#next a',
+				prev: '#prev a',
+				pagerAnchorBuilder: function(idx, slide) {
+				  return '<a href="#">&bull;</a>';
+				}
+			});
+		});
+
+		var margin = {top: 0, right: 10, bottom: 30, left: 10},
+			width = 600 - margin.left - margin.right,
+			height = 50 - margin.top - margin.bottom;
+
+		var x = d3.scale.linear()
+			.range([0, width])
+			.domain([0,365]);
+
+		var y = d3.scale.linear()
+			.range([height, 0]);
+
+		var x2 = d3.time.scale()
+			.range([0, width])
+			.domain([new Date(2012, 0, 1), new Date(2012, 11, 31)]);
+
+		var xAxis = d3.svg.axis()
+			.scale(x2)
+			.orient("bottom")
+			.tickFormat(d3.time.format('%b'));
+
+		var svg = d3.select("#timeline_svg").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+		var data = [
+		{x:1, event:'e1'},
+		{x:200, event:'e2'},
+		{x:300, event:'e3'}
+		];
+
+		var data2 = [
+		{x:10, event:'e1'},
+		{x:210, event:'e2'},
+		{x:290, event:'e3'}
+		];
+
+		  svg.append("g")
+			  .attr("class", "x axis")
+			  .attr("transform", "translate(0," + height + ")")
+			  .call(xAxis)
+		   
+		function redrawTimeline(data) {
+
+		  var dots = svg.selectAll(".dot")
+			  .data(data, function(d){return d.event;})
+			
+			dots.enter().append("circle")
+			  .attr("class", "dot")
+			  .attr("r", 5)
+			  .attr("cx", function(d) { return x(d.x); })
+			  .attr("cy", function(d) { return y(0); })
+			  .style("fill", function(d) { return d.color; })
+			  .on("mouseover", function(d){return tooltip(true, d,  event.pageX+10, event.pageY+10);})
+			  .on("mousemove", function(d){return tooltip(true, d,  event.pageX+10, event.pageY+10);;})
+			  .on("mouseout", function(d){return  tooltip(false);});
+
+			dots.transition()
+			  .duration(1000)
+			  .attr("cx", function(d,i) {return x(d.x); })
+
+			dots.exit().remove();
+		}
+
+
+
+		$('.timeline_year').click(function(){
+			selected_year = $(this).html();
+			updateMapAndTimeline();
+			getForecast();
+		});
+
+		function updateMapAndTimeline(){
+			var pixel = getClosestPixel(selected_lat_lng[0], selected_lat_lng[1]);
+
+			selected_lat_lng[0] = pixel.lat;
+			selected_lat_lng[1] = pixel.lng;
+
+			$('#latlng_span').html(pixel.lat + ', ' + pixel.lng + ' on ' + moment().year(selected_year).dayOfYear(selected_day).format('MMMM Do, YYYY'));
+
+			var data = [
+				{x:pixel[selected_year + '_e1'], event:'event_1', color:colors.e1},
+				{x:pixel[selected_year + '_e2'], event:'event_2', color:colors.e2},
+				{x:pixel[selected_year + '_e3'], event:'event_3', color:colors.e3},
+				{x:pixel[selected_year + '_e4'], event:'event_4', color:colors.e4},
+				{x:pixel[selected_year + '_e5'], event:'event_5', color:colors.e5},
+			];
+
+			// Update the selected year
+			$('#timeline .timeline_year').removeClass('selected');
+			$('.year_' + selected_year).addClass('selected');
+
+			redrawTimeline(data);
+			
+			if(mymap.draw){
+				mymap.draw();
+			}
+		}
+
+
+
+		function getClosestPixel(lat,lng){
+			var closest_diff = 999999999;
+			var closest_pixel;
+			_.each(pixel_data, function(o){
+				var diff = Math.abs(lat - o.lat) + Math.abs(lng - o.lng);
+
+				if(diff < closest_diff){
+					closest_diff = diff;
+					closest_pixel = o;
+				}
+			});
+
+			return closest_pixel;
+		}
+
+
+
+
+
+
+
+
+
+		//* Start the map section*//
+		var map_styles = [
+		  {
+			"featureType": "road",
+			"stylers": [
+			  { "visibility": "off" }
+			]
+		  },{
+			"featureType": "poi",
+			"stylers": [
+			  { "visibility": "off" }
+			]
+		  },{
+			"featureType": "administrative.locality",
+			"stylers": [
+			  { "visibility": "off" }
+			]
+		  },{
+			"featureType": "landscape.man_made",
+			"stylers": [
+			  { "visibility": "off" }
+			]
+		  },{
+		  }
+		];      
+		  
+		var styledMap = new google.maps.StyledMapType(map_styles,
+			{name: "Simple Map"});      
+			  
+		// Create the Google Map…
+		var map = new google.maps.Map(d3.select("#map").node(), {
+		  zoom: 10,
+		  center: new google.maps.LatLng(42.335897, -71.096649),
+		   mapTypeControlOptions: {
+			  mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+			}
+		});
+			  
+		map.mapTypes.set('map_style', styledMap);
+		  map.setMapTypeId('map_style');      
+
+		// Load the station data. When the data comes back, create an overlay.
+
+
+		d3.csv("pixels.csv", function(csvin) {
+		  pixel_data = csvin;
+		  var data = pixel_data;
+
+		  _.each(data, function(o){
+			o.lat = parseFloat(o.lat);
+			o.lng = parseFloat(o.lng);
+
+			// clean the data a little, making sure that events always occur after each other.
+			_.each(d3.range(2001,2014), function(year){
+				 o[year + '_e2'] = Math.max(o[year + '_e1'], o[year + '_e2'])
+				 o[year + '_e3'] = Math.max(o[year + '_e2'], o[year + '_e3'])
+				 o[year + '_e4'] = Math.max(o[year + '_e3'], o[year + '_e4'])
+				 o[year + '_e5'] = Math.max(o[year + '_e4'], o[year + '_e5'])
+			});
+		  })
+
+		  var sample = 3;
+
+		  var lats = _.pluck(data, 'lat');
+		  lats = _.uniq(lats).sort();
+		  lats.sort();
+		  var include_lats = {};
+
+		  _.each(lats, function(o,k){
+			if(k % sample === 0)include_lats[o] = true;
+		  });
+
+		  var lngs = _.pluck(data, 'lng');
+		  lngs = _.uniq(lngs).sort();
+		  lngs.sort();
+		  var include_lngs = {};
+
+		  _.each(lngs, function(o,k){
+			if(k % sample === 0)include_lngs[o] = true;
+		  });
+
+
+		  var tmp_data = [];
+		  _.each(data, function(o, k){
+			//if(include_lats[o.lat] && include_lngs[o.lng])tmp_data.push(o);
+			if(include_lats[o.lat] && k % sample === 0)tmp_data.push(o);
+		  });
+
+		  data = tmp_data;
+
+		  var overlay = new google.maps.OverlayView();
+
+		window.mymap = overlay;
+
+		var marker = new google.maps.Marker({
+				      position: new google.maps.LatLng(0,0),
+				      map: map,
+				      title: '',
+				      draggable:true,
+				  });
+
+		google.maps.event.addListener(marker, 'dragend', function(a) 
+				{
+				    selected_lat_lng = [this.getPosition().lat(), this.getPosition().lng()];
+				    updateMapAndTimeline();
+				    $('#zipcode').val(this.getPosition().lat() + ', ' + this.getPosition().lng());
+				    getForecast();
+				});
+
+
+		  // Add the container when the overlay is added to the map.
+		  overlay.onAdd = function() {
+			var layer = d3.select(this.getPanes().overlayLayer).append("div")
+				.attr("class", "stations");
+
+			// Draw each marker as a separate SVG element.
+			// We could use a single SVG, but what size would it have?
+
+			
+
+			overlay.draw = function() {
+			   
+
+
+				var myLatlng = new google.maps.LatLng(selected_lat_lng[0],selected_lat_lng[1]);
+
+
+				//_.each(markers, function(marker){
+				//	marker.setMap(null);
+				//})
+
+				marker.setPosition(myLatlng);
+				marker.setTitle(selected_lat_lng[0] + ', ' + selected_lat_lng[1]);
+
+
+			   _.each(data, function(o){
+					o.color = d3.scale.linear()
+					.domain([0, o[selected_year + '_e1'], o[selected_year + '_e2'], o[selected_year + '_e3'], o[selected_year + '_e4'], o[selected_year + '_e5'], 365])
+					.range([colors.e0, colors.e0, colors.e2, colors.e3, colors.e4, colors.e0, colors.e0]);
+				  });
+
+			  
+			  var projection = this.getProjection(),
+				  padding = 10;
+
+			  var pix = layer.selectAll("svg")
+				  .data(d3.entries(data))
+				  .each(transform) // update existing markers
+				.enter().append("svg:svg")
+				  .each(transform)
+				  .attr("class", "marker");
+
+			
+
+			  // Add a circle.
+			  /*
+			  marker.append("svg:circle")
+				  .attr("r", 4)
+				  .attr("cx", padding)
+				  .attr("cy", padding)
+				  .attr("class", "pixel");
+				  */
+
+				var marker_size = 10;
+
+			  pix.append("svg:rect")
+				  //.attr("r", 4)
+				  .attr("x", padding - marker_size/2)
+				  .attr("y", padding - marker_size/2)
+				  .attr("width", marker_size)
+				  .attr("height", marker_size)
+				  .attr("class", "pixel")
+
+				  
+				     
+				  
+			  
+			  layer.selectAll(".pixel")
+				  .attr('style', function(d){ return 'fill:' + d.value['color'](selected_day)});
+
+			  /*
+			  // Add a label.
+			  marker.append("svg:text")
+				  .attr("x", padding + 7)
+				  .attr("y", padding)
+				  .attr("dy", ".31em")
+				  .text(function(d) { return d.key; });
+			  */
+
+			  function transform(d) {
+			  	var a = this;
+			  	
+				d = new google.maps.LatLng(d.value['lat'], d.value['lng']);
+				d = projection.fromLatLngToDivPixel(d);
+				// you could add scaling in right here.
+				return d3.select(a)
+					.style("left", (d.x - padding) + "px")
+					.style("top", (d.y - padding) + "px");
+			  }
+			};
+		  };
+
+		  // Bind our overlay to the map…
+		  overlay.setMap(map);
+
+		  updateMapAndTimeline();
+		  getForecastOnce();
+		});
+
+
+
+
+
+
+
+
+
+
+
+		$('#zipcode').focus();
+	</script>
+	</body>
+</html>
